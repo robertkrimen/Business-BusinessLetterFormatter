@@ -7,11 +7,42 @@ use autodie;
 
 use Path::Class;
 use Template;
+use RTF::Writer;
 
 my $template = Template->new({
     BLOCKS => {
     
-        letter => <<'_END_',
+        rtf => <<'_END_',
+{\rtf1\ansi\deff0
+
+{\fonttbl
+{\f0 Times New Roman;}
+}
+
+{\pard\li5760
+[% from %]
+\par}
+
+{\pard
+[% to %]
+\par}
+
+{\pard
+[% salutation %]
+\par}
+
+{\pard
+\tab [% body %]
+\par}
+
+{\pard
+[% closing %]
+\par}
+
+}
+_END_
+
+        html => <<'_END_',
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -180,19 +211,46 @@ for( <STDIN>, "---\n" ) {
 
 sub escape($) {
     local $_ = shift;
+    $_ //= '';
     s/"/\\"/g;
     chomp;
     s/\n/\\n/g;
     $_;
 }
 
-$template->process( 'letter', {
-    from => escape $sections[0],
-    date => escape $sections[1],
-    to => escape $sections[2],
-    salutation => escape $sections[3],
-    body => escape $sections[4],
-    closing => escape $sections[5],
-} );
+sub rtfesc($) {
+    return RTF::Writer::rtfesc( @_ );
+}
+
+my $tmpl;
+$tmpl = 'html';
+$tmpl = 'rtf';
+my @context;
+
+if ( $tmpl eq 'html' ) {
+    push @context,
+        from => escape $sections[0],
+        date => escape $sections[1],
+        to => escape $sections[2],
+        salutation => escape $sections[3],
+        body => escape $sections[4],
+        closing => escape $sections[5],
+    ;
+}
+elsif ( $tmpl eq 'rtf' ) {
+    push @context,
+        from => rtfesc $sections[0],
+        date => rtfesc $sections[1],
+        to => rtfesc $sections[2],
+        salutation => rtfesc $sections[3],
+        body => rtfesc $sections[4],
+        closing => rtfesc $sections[5],
+    ;
+}
+else {
+    die "Don't know how to process template ($template)";
+}
+
+$template->process( $tmpl, { @context } ) or die $template->error;
 
 1;
