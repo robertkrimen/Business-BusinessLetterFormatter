@@ -1,0 +1,280 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Business::BusinessLetter;
+
+my ( @fields, $field );
+for( <STDIN>, "---\n" ) {
+    if ( $_ =~ m/^\s*---\s*$/ && defined $field ) {
+        push @fields, $field;
+        undef $field;
+    }
+    else {
+        $field .= $_;
+    }
+}
+
+print Business::BusinessLetter->render(
+    from => $fields[0],
+    date => $fields[1],
+    to => $fields[2],
+    salutation => $fields[3],
+    body => $fields[4],
+    closing => $fields[5],
+);
+
+__END__
+
+use autodie;
+
+use Path::Class;
+use Template;
+use RTF::Writer;
+
+my $template = Template->new({
+    BLOCKS => {
+    
+        rtf => <<'_END_',
+{\rtf1\ansi\deff0
+
+{\fonttbl
+{\f0 Times New Roman;}
+}
+
+{\pard\li5760
+[% from %]
+\par}
+
+{\pard
+[% to %]
+\par}
+
+{\pard
+[% salutation %]
+\par}
+
+{\pard
+\tab [% body %]
+\par}
+
+{\pard
+[% closing %]
+\par}
+
+}
+_END_
+
+        html => <<'_END_',
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>Indented business letter</title>
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?2.8.0r4/build/reset-fonts-grids/reset-fonts-grids.css&2.8.0r4/build/base/base-min.css"> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+<style type="text/css">
+
+body {
+}
+
+.menu {
+    text-align: left;
+    background-color: #eee;
+    margin: 1em 0;
+    padding: 2px;
+}
+
+.menu a {
+    text-decoration: none;
+}
+
+.menu a:hover {
+    text-decoration: underline;
+}
+
+.letter {
+    font-family: Courier;
+    text-align: left;
+    width: 40em;
+    padding: 4em;
+}
+
+.ltr-from,
+.ltr-to,
+.ltr-date,
+.ltr-salutation,
+.ltr-body,
+.ltr-closing {
+    margin-bottom: 1em;
+}
+
+.clear {
+    clear: both;
+}
+
+.letter-ib .ltr-body p {
+    text-indent: 4em;
+}
+
+.letter-mb .ltr-from,
+.letter-mb .ltr-date,
+.letter-mb .ltr-closing,
+.letter-ib .ltr-from,
+.letter-ib .ltr-date,
+.letter-ib .ltr-closing {
+    position: relative;
+    left: 55%;
+}
+
+</style>
+</head>
+<body>
+
+    <div class="letter letter-ib">
+
+        <div class="ltr-from">
+        </div>
+
+        <div class="ltr-date">
+        </div>
+
+        <div class="ltr-to">
+        </div>
+
+        <div class="ltr-salutation">
+        </div>
+
+        <div class="ltr-body">
+        </div>
+
+        <div class="ltr-closing">
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+
+    var letter = {
+        date: "[% date %]",
+
+        from: "[% from %]",
+
+        to: "[% to %]",
+            
+        salutation: "[% salutation %]",
+
+        body: "[% body %]",
+
+        closing: "[% closing %]",
+    };
+
+    function formatSmall( text ) {
+        return text.replace( /\n/g, "<br/>" );
+    }
+
+    function formatBody( text ) {
+        return "<p>" + text.replace( /\n\n+/g, "</p><p>" ) + "<p>";
+    }
+
+    function buildSmallComponent( name ) {
+        var clss = ".ltr-" + name;
+        $( clss ).html( formatSmall( letter[name] ) );
+    }
+
+    function buildBodyComponent( name ) {
+        var clss = ".ltr-" + name;
+        $( clss ).html( formatBody( letter[name] ) );
+    }
+
+    $(document).ready(function() {
+
+        buildSmallComponent( "from" );
+        buildSmallComponent( "date" );
+        buildSmallComponent( "to" );
+        buildSmallComponent( "salutation" );
+        buildSmallComponent( "closing" );
+
+        buildBodyComponent( "body" );
+
+        $(".letter").removeClass("letter-fb letter-mb letter-ib").addClass("letter-ib");
+    });
+    </script>
+
+</body>
+</html>
+_END_
+
+    },
+
+});
+
+sub fatal {
+    die @_, "\n";
+
+}
+
+#fatal "No arguments given" unless @ARGV;
+#
+#my $file = $ARGV[0];
+#
+#fatal "\"$file\" is not a file/readable" unless -f $file && -r _;
+#
+#$file = file $file;
+
+my ( @sections, $section );
+for( <STDIN>, "---\n" ) {
+    if ( $_ =~ m/^\s*---\s*$/ && defined $section ) {
+        push @sections, $section;
+        undef $section;
+    }
+    else {
+        $section .= $_;
+    }
+}
+
+sub escape($) {
+    local $_ = shift;
+    $_ //= '';
+    s/"/\\"/g;
+    chomp;
+    s/\n/\\n/g;
+    $_;
+}
+
+sub rtfesc($) {
+    return RTF::Writer::rtfesc( @_ );
+}
+
+my $tmpl;
+$tmpl = 'html';
+$tmpl = 'rtf';
+my @context;
+
+if ( $tmpl eq 'html' ) {
+    push @context,
+        from => escape $sections[0],
+        date => escape $sections[1],
+        to => escape $sections[2],
+        salutation => escape $sections[3],
+        body => escape $sections[4],
+        closing => escape $sections[5],
+    ;
+}
+elsif ( $tmpl eq 'rtf' ) {
+    push @context,
+        from => rtfesc $sections[0],
+        date => rtfesc $sections[1],
+        to => rtfesc $sections[2],
+        salutation => rtfesc $sections[3],
+        body => rtfesc $sections[4],
+        closing => rtfesc $sections[5],
+    ;
+}
+else {
+    die "Don't know how to process template ($template)";
+}
+
+$template->process( $tmpl, { @context } ) or die $template->error;
+
+1;
