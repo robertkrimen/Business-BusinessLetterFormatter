@@ -6,19 +6,25 @@ use warnings;
 sub rtf_template {
 
     return <<'_END_';
+[% SWITCH( style ) %]
+[% CASE 'full' %]
+[% CASE [ 'modified', 'indented' ] %]
+[% SET indentation = "\\li5760" %]
+[% END %]
+[% CLEAR -%]
 {\rtf1\ansi\deff0
 
 {\fonttbl
 {\f0 Times New Roman;}
 }
 
-{\pard\li5760
+{\pard[% indentation %]
 [% from %]
 \line
 \par}
 
 [% IF date %]
-{\pard\li5760
+{\pard[% indentation %]
 [% date %]
 \line
 \par}
@@ -36,7 +42,7 @@ sub rtf_template {
 
 [% body %]
 
-{\pard
+{\pard[% indentation %]
 [% closing %]
 \line
 \par}

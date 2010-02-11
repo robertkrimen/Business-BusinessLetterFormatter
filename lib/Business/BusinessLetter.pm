@@ -6,6 +6,7 @@ use warnings;
 use Any::Moose;
 
 use Business::BusinessLetter::Assets;
+use Carp;
 use RTF::Writer();
 use Template;
 use DateTimeX::Easy;
@@ -23,10 +24,12 @@ sub format_rtf_field ($) {
     return RTF::Writer::rtfesc( $field );
 }
 
-sub format_rtf_body ($) {
+sub format_rtf_body ($;$) {
     my $field = format_rtf_field shift;
+    my $indent = shift;
+    $indent = "\\tab " if $indent;
     my @paragraphs = split m/(?:\s*\\line\s*)+/, $field;
-    return join "\n\n", map { "{\\pard\n$_\\line\n\\par}" } @paragraphs;
+    return join "\n\n", map { "{\\pard\n$indent$_\\line\n\\par}" } @paragraphs;
 }
 
 sub render {
@@ -38,7 +41,15 @@ sub render {
         $context{$_} = format_rtf_field $given{$_};
     }
 
-    $context{$_} = format_rtf_body $given{$_} for qw/ body /;
+    my $style = $given{style};
+    $style = 'indented' unless defined $style;
+    $style =~ m/^\s*(full|modified|indented)\s*$/i;
+    croak "Don't understand style ($style)" unless $1;
+    $style = lc $style;
+    $context{style} = $style;
+    
+    my $indent = $style eq 'indented';
+    $context{$_} = format_rtf_body $given{$_}, $indent for qw/ body /;
 
     my $date = $given{date};
     my $date_format = "%B %d, %Y";
@@ -54,6 +65,7 @@ sub render {
     }
     $date = format_rtf_field $date;
     $context{date} = $date;
+
 
 #        from => rtfesc $sections[0],
 #        date => rtfesc $sections[1],

@@ -23,6 +23,7 @@ print Business::BusinessLetter->render(
     salutation => $fields[3],
     body => $fields[4],
     closing => $fields[5],
+    style => 'full',
 );
 
 __END__
