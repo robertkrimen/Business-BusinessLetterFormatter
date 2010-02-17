@@ -81,11 +81,21 @@ body {
 
         <a class="rtf-full" href="#">Full</a> |
 
+        <a class="rtf-modified" href="#">Modified</a> |
+
+        <a class="rtf-indented" href="#">Indented</a>
+
     </div>
 
     <form id="rtf-form" action="/rtf" method="post">
 
+        <input id="rtf-form-from" name="from" type="hidden">
+        <input id="rtf-form-date" name="date" type="hidden">
+        <input id="rtf-form-to" name="to" type="hidden">
+        <input id="rtf-form-salutation" name="salutation" type="hidden">
         <input id="rtf-form-body" name="body" type="hidden">
+        <input id="rtf-form-closing" name="closing" type="hidden">
+        <input id="rtf-form-style" name="style" type="hidden">
 
     </form>
 
@@ -214,11 +224,29 @@ body {
             $(".letter").removeClass("letter-fb letter-mb letter-ib").addClass("letter-ib");
         } );
 
-        $(".rtf-full").live( "click", function() {
+        function rtfSubmit( style ) {
+        
+            $("#rtf-form-style").val( style );
+            $("#rtf-form-from").val( letter["from"] );
+            $("#rtf-form-to").val( letter["to"] );
+            $("#rtf-form-closing").val( letter["closing"] );
+            $("#rtf-form-salutation").val( letter["salutation"] );
+            $("#rtf-form-date").val( letter["date"] );
             $("#rtf-form-body").val( letter["body"] );
             $("#rtf-form").submit();
+        }
+
+        $(".rtf-full").live( "click", function() {
+            rtfSubmit( "full" );
         } );
 
+        $(".rtf-modified").live( "click", function() {
+            rtfSubmit( "modified" );
+        } );
+
+        $(".rtf-indented").live( "click", function() {
+            rtfSubmit( "indented" );
+        } );
 
 /*
         window.setTimeout( function() {

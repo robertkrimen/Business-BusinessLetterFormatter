@@ -20,10 +20,11 @@ my $app = sub {
 
     if ( $request->path =~ m/^\/rtf\/?/ ) {
         $output = Business::BusinessLetter->render(
-            body => $request->parameters->{body},
-            style => 'full',
+            ( map { $_ => $request->parameters->{$_} }
+                qw/ from date to salutation body closing style / )
         );
         $response->content_type( 'text/rtf' );
+        $response->headers->header( 'Content-Disposition' => 'attachment; filename=letter.rtf' );
     }
     else {
         $template->process( 'index.tt.html', {}, \$output ) or die $template->error;
