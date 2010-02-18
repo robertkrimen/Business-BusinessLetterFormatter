@@ -3,9 +3,6 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <title>Indented business letter</title>
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?2.8.0r4/build/reset-fonts-grids/reset-fonts-grids.css&2.8.0r4/build/base/base-min.css"> 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
-<script type="text/javascript" src="/js/jquery.jeditable.js"></script>
-<script type="text/javascript" src="/js/jquery.enumerable.js"></script>
 <style type="text/css">
 
 body {
@@ -13,13 +10,21 @@ body {
 
 .menu {
     text-align: left;
-    background-color: #eee;
-    margin: 1em 0;
+    margin: 0.25em 0;
     padding: 2px;
+    color: #aaa;
 }
 
 .menu a {
     text-decoration: none;
+    color: #367;
+    padding: 4px;
+    border: 1px solid #fff;
+}
+
+.menu a.selected {
+    background-color: #eef;
+    border: 1px solid #ccf;
 }
 
 .menu a:hover {
@@ -30,8 +35,9 @@ body {
     font-family: Courier;
     text-align: left;
     width: 40em;
-    padding: 4em;
+    padding: 1.5em;
     border: 1px solid #aaa;
+    margin: 0 auto;
 }
 
 .ltr-from,
@@ -67,23 +73,13 @@ body {
 
     <div class="menu">
 
-        <a class="switch-full" href="#">Full block</a> |
+        <a class="style-select style-full" href="#">Full</a> |
 
-        <a class="switch-modified" href="#">Modified block</a> |
+        <a class="style-select style-modified" href="#">Modified</a> |
 
-        <a class="switch-indented" href="#">Indented block</a>
+        <a class="style-select style-indented" href="#">Indented</a> |
 
-    </div>
-
-    <div class="menu">
-
-        <b>RTF</b>
-
-        <a class="rtf-full" href="#">Full</a> |
-
-        <a class="rtf-modified" href="#">Modified</a> |
-
-        <a class="rtf-indented" href="#">Indented</a>
+        <a class="download-rtf" href="#">Download RTF</a>
 
     </div>
 
@@ -121,138 +117,16 @@ body {
 
     </div>
 
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.jeditable.js"></script>
+    <script type="text/javascript" src="/js/jquery.enumerable.js"></script>
+    <script type="text/javascript" src="/js/document.js"></script>
     <script type="text/javascript">
 
-    var letter = {
-        date: 
-            "15 March 2005",
+        $(document).ready(function() {
+            initialize();
+        });
 
-        from:
-            "5 Hill Street\n" +
-            "Madison, Wisconsin 53700",
-
-        to:
-            "Ms. Helen Jones\n" +
-            "President\n" +
-            "Jones, Jones &amp; Jones\n" +
-            "123 International Lane\n" +
-            "Boston, Massachusetts 01234",
-
-        salutation:
-            "Dear Ms. Jones:",
-
-        closing:
-            "Sincerely,\n\n" +
-            "John Doe",
-
-        body: 
-            "Ah, business letter format--there are block formats, and indented formats, and modified block formats . . . and who knows what others.  To simplify matters, we're demonstrating the indented format on this page, one of the two most common formats.  For authoritative advice about all the variations, we highly recommend <em>The Gregg Reference Manual</em>, 9th ed. (New York: McGraw-Hill, 2001), a great reference tool for workplace communications.  There seems to be no consensus about such fine points as whether to skip a line after your return address and before the date: some guidelines suggest that you do; others do not.  Let's hope that your business letter succeeds no matter which choice you make!" + "\n\n" +
-
-            "If you are using the indented form, place your address at the top, with the left edge of the address aligned with the center of the page. Skip a line and type the date so that it lines up underneath your address.  Type the inside address and salutation flush left; the salutation should be followed by a colon. For formal letters, avoid abbreviations." + "\n\n" +
-
-            "Indent the first line of each paragraph one-half inch. Skip lines between paragraphs." + "\n\n" +
-
-            "Instead of placing the closing and signature lines flush left, type them in the center, even with the address and date above, as illustrated here. Now doesn't that look professional?",
-
-    };
-
-    function formatSmall( text ) {
-        return text.replace( /\n/g, "<br/>" );
-    }
-
-    function formatBody( text ) {
-        return "<p>" + text.replace( /\n\n+/g, "</p><p>" ) + "<p>";
-    }
-
-    function buildSmallComponent( name ) {
-        var clss = ".ltr-" + name;
-        $( clss ).html( formatSmall( letter[name] ) );
-        $( clss ).editable(
-            function( input ) {
-                letter[name] = input;
-                return formatSmall( input );
-            }, {
-                data: function() {
-                    return letter[name]
-                },
-                submit: 'OK',
-                cancel: 'Cancel',
-                type: 'textarea',
-                rows: '3',
-            }
-        );
-    }
-
-    function buildBodyComponent( name ) {
-        var clss = ".ltr-" + name;
-        $( clss ).html( formatBody( letter[name] ) );
-        $( clss ).editable(
-            function( input ) {
-                letter[name] = input;
-                return formatBody( input );
-            }, {
-                data: function() {
-                    return letter[name]
-                },
-                submit: 'OK',
-                cancel: 'Cancel',
-                type: 'textarea',
-                rows: '24',
-            }
-        );
-    }
-
-    $(document).ready(function() {
-
-        buildSmallComponent( "from" );
-        buildSmallComponent( "date" );
-        buildSmallComponent( "to" );
-        buildSmallComponent( "salutation" );
-        buildSmallComponent( "closing" );
-
-        buildBodyComponent( "body" );
-
-        $(".switch-full").live( "click", function() {
-            $(".letter").removeClass("letter-fb letter-mb letter-ib").addClass("letter-fb");
-        } );
-
-        $(".switch-modified").live( "click", function() {
-            $(".letter").removeClass("letter-fb letter-mb letter-ib").addClass("letter-mb");
-        } );
-
-        $(".switch-indented").live( "click", function() {
-            $(".letter").removeClass("letter-fb letter-mb letter-ib").addClass("letter-ib");
-        } );
-
-        function rtfSubmit( style ) {
-        
-            $("#rtf-form-style").val( style );
-            $("#rtf-form-from").val( letter["from"] );
-            $("#rtf-form-to").val( letter["to"] );
-            $("#rtf-form-closing").val( letter["closing"] );
-            $("#rtf-form-salutation").val( letter["salutation"] );
-            $("#rtf-form-date").val( letter["date"] );
-            $("#rtf-form-body").val( letter["body"] );
-            $("#rtf-form").submit();
-        }
-
-        $(".rtf-full").live( "click", function() {
-            rtfSubmit( "full" );
-        } );
-
-        $(".rtf-modified").live( "click", function() {
-            rtfSubmit( "modified" );
-        } );
-
-        $(".rtf-indented").live( "click", function() {
-            rtfSubmit( "indented" );
-        } );
-
-/*
-        window.setTimeout( function() {
-        }, 1000 );
-*/
-    });
     </script>
 
 </body>
